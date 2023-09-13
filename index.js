@@ -1,8 +1,8 @@
 class ProductManager {
     constructor() {
     this.products = [];
+    console.log([])
     }
-
     addProduct(product) {
     if (this.products.some((p) => p.code === product.code)) {
         throw new Error("El producto con el mismo código ya existe.");
