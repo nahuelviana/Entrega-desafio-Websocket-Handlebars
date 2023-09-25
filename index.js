@@ -75,8 +75,8 @@ class ProductManager {
 
 const productManager = new ProductManager();
 
+let newProduct;
 try {
-    let newProduct; // Declaración fuera del bloque try
     newProduct = {
         title: "producto prueba",
         description: "este es un producto de prueba",
