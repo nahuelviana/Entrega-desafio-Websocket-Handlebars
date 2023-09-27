@@ -42,7 +42,7 @@ class ProductManager {
     }
 
     getProductById(id) {
-        console.log("Buscando producto con ID:", id); // Agrega este mensaje de registro
+        console.log("Buscando producto con ID:", id);
         const product = this.products.find((p) => p.id === id);
         if (!product) {
             throw new Error("Producto no encontrado.");
@@ -93,7 +93,6 @@ try {
 }
 console.log("Productos después de agregar:", productManager.getProducts());
 try {
-    // Elimina la declaración de 'const newProduct' aquí
     const product = productManager.getProductById(newProduct.id);
     console.log("Producto encontrado por ID:", product);
 } catch (error) {
