@@ -1,4 +1,8 @@
-    const fs = require('fs');
+const fs = require('fs');
+const express = require('express');
+const app = express();
+const port = 8080;
+const cartsRouter = require('./cartsRouter');
 
 class ProductManager {
     constructor() {
@@ -72,7 +76,7 @@ class ProductManager {
         this.saveDataToFile();
     }
 }
-
+app.use(express.json());
 const productManager = new ProductManager();
 
 let newProduct;
@@ -86,6 +90,7 @@ try {
         stock: 25,
     };
     productManager.addProduct(newProduct);
+    productManager.saveDataToFile();
     const product = productManager.getProductById(newProduct.id);
     console.log("Producto encontrado por ID:", product);
 } catch (error) {
@@ -99,24 +104,55 @@ try {
     console.error(error.message);
 }
 
-
-    const express = require('express');
-    const app = express();
-    const port = 8080;
-
-
-app.get('/products', (req, res) => {
-    const { limit } = req.query;
-    if (limit) {
-        const limitValue = parseInt(limit);
-        const products = productManager.getProducts().slice(0, limitValue);
-        res.json(products);
-    } else {
-        const products = productManager.getProducts();
-        res.json(products);
+app.post('/api/products', (req, res) => {
+    try {
+        const productData = req.body;
+        productManager.addProduct(productData);
+        res.status(201).json(productData);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
     }
 });
-app.get('/products/:id', (req, res) => {
+
+app.put('/api/products/:id', (req, res) => {
+    const { id } = req.params;
+    const updatedFields = req.body;
+    try {
+        productManager.updateProduct(id, updatedFields);
+        res.status(200).json({ message: 'Producto actualizado correctamente' });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+app.delete('/api/products/:id', (req, res) => {
+    const { id } = req.params;
+    try {
+        productManager.deleteProduct(id);
+        res.status(204).send(); // Respuesta exitosa sin contenido
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+
+
+
+
+    app.use('/api/carts', cartsRouter);
+
+    app.get('/api/products', (req, res) => {
+        const { limit } = req.query;
+        if (limit) {
+            const limitValue = parseInt(limit);
+            const products = productManager.getProducts().slice(0, limitValue);
+            res.json(products);
+        } else {
+            const products = productManager.getProducts();
+            res.json(products);
+        }
+    });
+app.get('/api/products/:id', (req, res) => {
     const { id } = req.params;
     try {
         const product = productManager.getProductById(id);
@@ -125,7 +161,7 @@ app.get('/products/:id', (req, res) => {
         res.status(404).json({ error: 'Producto no encontrado' });
     }
 });
-        app.get('/products/limit/:limit', (req, res) => {
+        app.get('/api/products/limit/:limit', (req, res) => {
             const limit = parseInt(req.params.limit);
             const products = productManager.getProducts().slice(0, limit);
             res.json(products);
