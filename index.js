@@ -4,6 +4,8 @@ const app = express();
 const port = 8080;
 const cartsRouter = require('./cartsRouter');
 
+
+// Clase ProductManager para gestionar productos
 class ProductManager {
     constructor() {
         this.products = [];
@@ -13,7 +15,7 @@ class ProductManager {
     generateId() {
         return '_' + Math.random().toString(36).substr(2, 9);
     }
-
+// Cargar datos de productos desde el archivo JSON
     loadDataFromFile() {
         try {
             const data = fs.readFileSync(this.dataFile, 'utf-8');
@@ -22,7 +24,7 @@ class ProductManager {
             this.products = [];
         }
     }
-
+// Guardar datos de productos en el archivo JSON
     saveDataToFile() {
         try {
             const data = JSON.stringify(this.products, null, 2);
@@ -40,7 +42,7 @@ class ProductManager {
         this.products.push(product);
         this.saveDataToFile();
     }
-
+// Obtener todos los productos
     getProducts() {
         return this.products;
     }
@@ -138,9 +140,9 @@ app.delete('/api/products/:id', (req, res) => {
 
 
 
-
+// Usar el router de carritos definido en cartsRouter.js
     app.use('/api/carts', cartsRouter);
-
+// Rutas para obtener productos con límite
     app.get('/api/products', (req, res) => {
         const { limit } = req.query;
         if (limit) {
@@ -152,6 +154,7 @@ app.delete('/api/products/:id', (req, res) => {
             res.json(products);
         }
     });
+// Ruta para obtener un producto por su ID
 app.get('/api/products/:id', (req, res) => {
     const { id } = req.params;
     try {
@@ -161,14 +164,18 @@ app.get('/api/products/:id', (req, res) => {
         res.status(404).json({ error: 'Producto no encontrado' });
     }
 });
+// Ruta para obtener productos con límite específico
         app.get('/api/products/limit/:limit', (req, res) => {
             const limit = parseInt(req.params.limit);
             const products = productManager.getProducts().slice(0, limit);
             res.json(products);
         });
+        // Ruta de error para productos no encontrados
     app.get('/products/notfound', (req, res) => {
         res.status(404).json({ error: 'Producto no encontrado' });
     });
+    
+// Iniciar el servidor en el puerto especificado
     app.listen(port, () => {
         console.log(`Servidor corriendo en http://localhost:${port}`);
     });
