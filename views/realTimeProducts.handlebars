@@ -1,0 +1,46 @@
+<html>
+<head>
+    <title>Lista de Productos en Tiempo Real</title>
+</head>
+<body>
+    <h1>Lista de Productos en Tiempo Real</h1>
+    <ul id="productList">
+        {{#each products}}
+            <li>{{this.title}} - {{this.price}}</li>
+        {{/each}}
+    </ul>
+
+    <!-- Incluir el cliente de Socket.IO -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        
+        const socket = io('/realtime');
+
+        // Manejar el evento 'initialProductList' para mostrar la lista inicial de productos
+        socket.on('initialProductList', (products) => {
+            const productList = document.getElementById('productList');
+            productList.innerHTML = ''; // Limpiar la lista actual
+
+            // Agregar los productos recibidos a la lista en tiempo real
+            products.forEach((productData) => {
+                const productItem = document.createElement('li');
+                productItem.textContent = `${productData.nombre} - ${productData.precio}`;
+                productList.appendChild(productItem);
+            });
+        });
+
+        // Manejar el evento 'productCreated' para agregar productos nuevos a la lista
+        socket.on('productCreated', (productData) => {
+            console.log('Nuevo producto creado:', productData);
+
+            
+            const productItem = document.createElement('li');
+            productItem.textContent = `${productData.title} - ${productData.price}`;
+
+            
+            const productList = document.getElementById('productList');
+            productList.appendChild(productItem);
+        });
+    </script>
+</body>
+</html>

@@ -3,7 +3,14 @@ const express = require('express');
 const app = express();
 const port = 8080;
 const cartsRouter = require('./cartsRouter');
+const exphbs = require('express-handlebars');
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
 
+
+const handlebars = exphbs.create({ defaultLayout: 'main' });
+app.engine('handlebars', handlebars.engine);
+app.set('view engine', 'handlebars');
 
 // Clase ProductManager para gestionar productos
 class ProductManager {
@@ -106,15 +113,24 @@ try {
     console.error(error.message);
 }
 
+app.get('/products', (req, res) => {
+    const products = productManager.getProducts();
+    res.render('home', { products });
+});
+
+
 app.post('/api/products', (req, res) => {
     try {
         const productData = req.body;
         productManager.addProduct(productData);
+        // Emitir un evento para notificar a los clientes que se creó un producto
+        io.of('/realtime').emit('productCreated', productData);
         res.status(201).json(productData);
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
 });
+
 
 app.put('/api/products/:id', (req, res) => {
     const { id } = req.params;
@@ -175,7 +191,34 @@ app.get('/api/products/:id', (req, res) => {
         res.status(404).json({ error: 'Producto no encontrado' });
     });
     
-// Iniciar el servidor en el puerto especificado
-    app.listen(port, () => {
-        console.log(`Servidor corriendo en http://localhost:${port}`);
+    app.get('/', (req, res) => {
+        const products = productManager.getProducts();
+        res.render('home', { products });
     });
+    app.get('/realtimeproducts', (req, res) => {
+        const products = productManager.getProducts();
+        res.render('realTimeProducts', { products });
+    });
+
+    io.of('/realtime').on('connection', (socket) => {
+        console.log('Usuario conectado a WebSocket');
+    
+        // Enviar la lista actual de productos al cliente
+        socket.emit('initialProductList', productManager.getProducts());
+    
+        socket.on('productCreated', (productData) => {
+            console.log('Nuevo producto creado:', productData);
+    
+            // Crea un nuevo elemento de lista <li> para el nuevo producto
+            const productItem = document.createElement('li');
+            productItem.textContent = `${productData.title} - ${productData.price}`;
+    
+            // Agrega el elemento de lista a la lista de productos en tiempo real
+            const productList = document.getElementById('productList');
+            productList.appendChild(productItem);
+        });
+    });
+// Iniciar el servidor en el puerto especificado
+http.listen(port, () => {
+    console.log(`Servidor corriendo en http://localhost:${port}`);
+});
